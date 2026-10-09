@@ -31,7 +31,6 @@ jobs:
 
       - name: Compiler APK debug
         run: |
-          cd MBL-3
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
@@ -40,5 +39,5 @@ jobs:
         with:
           name: application-android
           path: |
-            MBL-3/app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
