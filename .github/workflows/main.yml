@@ -30,8 +30,8 @@ jobs:
           find . -maxdepth 4 \( -name gradlew -o -name build.gradle -o -name build.gradle.kts \) -print
 
       - name: Compiler APK debug
-        working-directory: "MBL-3"
         run: |
+          cd MBL-3
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
