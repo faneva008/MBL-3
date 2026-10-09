@@ -1,0 +1,86 @@
+.overlay[hidden] {
+  display: none !important;
+  pointer-events: none !important;
+}
+.overlay:not([hidden]) {
+  pointer-events: auto;
+}
+.reader-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 12px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: center;
+}
+.reader-pagination button {
+  min-height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 0 10px;
+  background: var(--surface-soft);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.reader-pagination button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+.reader-pagination span {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+.reader-pagination small {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+}
+.reader-error {
+  margin: 12px 0;
+  padding: 18px 14px;
+  border: 1px solid #edc4a1;
+  border-radius: 16px;
+  background: #fff8f0;
+  color: #533d2f;
+}
+.reader-error strong {
+  display: block;
+  font-size: 13px;
+}
+.reader-error p {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.reader-error > div {
+  display: flex;
+  gap: 8px;
+}
+.reader-error button {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.dark .reader-pagination {
+  background: var(--surface);
+}
+.dark .reader-pagination button {
+  background: #273449;
+  color: #c9c5ff;
+}
+.dark .reader-error {
+  background: #382a1d;
+  border-color: #785839;
+  color: #f2ddc8;
+}

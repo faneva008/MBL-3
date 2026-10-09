@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#191747">
+  <meta name="description" content="Répertoire juridique malagasy consultable hors ligne, avec synchronisation Supabase configurable.">
+  <title>Mada Base Légale — Répertoire juridique malagasy</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./mbl-logo.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./reader-safety.css">
+  <link rel="stylesheet" href="./auth-freemium.css">
+  <script src="./config.js"></script>
+  <script src="./mobile-data.js"></script>
+  <script src="./mobile-access.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <section class="auth-gate" id="auth-gate" aria-hidden="false">
+    <div class="auth-brand"><img src="./mbl-logo.png" alt=""><div><strong>Mada Base Légale</strong><span>Lois &amp; répertoire de Madagascar</span></div></div>
+    <main class="auth-card" aria-labelledby="auth-title">
+      <span class="auth-eyebrow">ESPACE PERSONNEL</span>
+      <h1 id="auth-title">Connectez-vous</h1>
+      <p id="auth-copy">Connectez-vous pour consulter le catalogue. Le Lexique juridique reste gratuit.</p>
+      <form id="auth-form" novalidate>
+        <label class="auth-field"><span>Adresse e-mail</span><input id="auth-email" type="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="nom@exemple.mg"></label>
+        <label class="auth-field"><span>Mot de passe</span><input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Au moins 6 caractères"></label>
+        <p class="auth-message" id="auth-message" role="alert" aria-live="assertive" hidden></p>
+        <button class="auth-submit" id="auth-submit" type="submit" disabled><span id="auth-submit-label">Se connecter</span></button>
+      </form>
+      <p class="auth-switch-line"><span id="auth-switch-copy">Pas encore de compte ?</span> <button type="button" id="auth-mode-toggle" data-action="toggle-auth-mode" disabled>Créer un compte</button></p>
+      <p class="auth-security-note">Votre session est conservée sur cet appareil. L’accès Pro est vérifié auprès de Supabase.</p><button class="auth-help-button" type="button" data-action="help-whatsapp">Besoin d’aide ? Contacter WhatsApp</button>
+      <p class="auth-bootstrap-status" id="auth-bootstrap-status" role="status">Vérification de la configuration…</p>
+    </main>
+    <footer class="auth-footer">Mada Base Légale · Madagascar</footer>
+  </section>
+
+  <div class="app-shell" id="app-shell" hidden inert>
+    <main class="main-scroll" id="main-scroll">
+      <section class="view view-active" id="view-recherche" data-view="recherche" aria-label="Recherche juridique">
+        <header class="hero">
+          <div class="hero-glow hero-glow-one"></div>
+          <div class="hero-glow hero-glow-two"></div>
+          <div class="hero-top">
+            <div class="brand-lockup">
+              <div class="brand-mark" aria-hidden="true"><img class="brand-logo" src="./mbl-logo.png" alt=""></div>
+              <div class="brand-copy">
+                <h1>Mada Base Légale</h1>
+                <p>Lois &amp; répertoire de Madagascar</p>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button class="icon-button hero-icon-button" data-action="theme" aria-label="Changer le thème" title="Mode clair/sombre"><span id="theme-icon"></span></button>
+              <button class="admin-button" data-action="admin-info"><span class="admin-shield" id="admin-icon"></span> Admin</button>
+            </div>
+          </div>
+          <div class="connection-line">
+            <span class="connection-dot" id="connection-dot"></span>
+            <span id="connection-label">Base locale prête</span>
+            <span class="demo-pill" id="demo-pill">DÉMO</span>
+          </div>
+          <form class="search-box" id="search-form" role="search">
+            <span class="search-icon" id="search-icon" aria-hidden="true"></span>
+            <input id="search-input" type="search" autocomplete="off" placeholder="Chercher (ex. préavis, foncier, SARL…)" aria-label="Rechercher dans les textes">
+            <button class="search-clear" type="button" data-action="reset" aria-label="Effacer la recherche"><span id="reset-icon"></span></button>
+          </form>
+          <div class="type-scroller" id="type-filters" aria-label="Filtrer par type d'acte"></div>
+        </header>
+
+        <section class="reading-history-panel" id="reading-history-panel" hidden aria-labelledby="reading-history-title">
+          <div class="history-panel-heading"><div><span class="eyebrow">REPRISE RAPIDE</span><h2 id="reading-history-title">Reprendre la lecture</h2></div><button class="text-link" type="button" data-action="clear-reading-history">Effacer</button></div>
+          <div class="reading-history-list" id="reading-history-list"></div>
+        </section>
+
+        <div class="results-row">
+          <div class="results-summary">
+            <span id="results-count">0 texte disponible</span>
+            <span class="domain-filter-chip" id="domain-filter-chip" hidden>
+              <span id="domain-filter-label"></span>
+              <button data-action="clear-domain" aria-label="Retirer le filtre de domaine"><span id="domain-clear-icon"></span></button>
+            </span>
+          </div>
+          <button class="text-link" data-action="reset">Effacer filtres</button>
+        </div>
+        <div class="law-list" id="law-list"></div>
+        <p class="disclaimer-inline" id="content-disclaimer">Le contenu et le statut doivent être vérifiés à partir du Journal Officiel.</p>
+      </section>
+
+      <section class="view lecture-view" id="view-lecture" data-view="lecture" hidden aria-label="Onglet Lecture">
+        <section class="reader-sheet reading-tab-sheet" id="reader-content" aria-label="Lecteur juridique">
+          <header class="reader-header">
+            <button class="round-close reader-toc-button" id="reader-toc-button" type="button" data-action="toc-open" aria-label="Ouvrir la table des matières" disabled><span id="reader-toc-icon"></span></button>
+            <div class="reader-reference-wrap"><div class="reader-reference" id="reader-reference">Choisir un texte</div><span class="reader-mode-label" id="reader-mode-label"></span></div>
+            <button class="round-close reader-history-button" id="reader-history-button" type="button" data-action="history-open" aria-label="Ouvrir l’historique des dernières lectures"><span id="reader-history-icon"></span></button>
+          </header>
+          <div class="reader-search-row" id="reader-search-row" hidden><span id="reader-search-icon"></span><input id="reader-search" type="search" placeholder="Rechercher dans ce texte…" aria-label="Rechercher dans le texte"><button data-action="clear-reader-search" id="reader-search-clear" hidden aria-label="Effacer"><span id="reader-search-clear-icon"></span></button><span class="reader-search-status" id="reader-search-status" aria-live="polite">0 / 0</span><button class="reader-search-step" type="button" data-action="reader-search-previous" aria-label="Occurrence précédente" title="Précédent">‹</button><button class="reader-search-step" type="button" data-action="reader-search-next" aria-label="Occurrence suivante" title="Suivant">›</button></div>
+          <div class="reader-scroll reader-scroll-empty" id="reader-scroll">
+            <div class="reader-empty-state" id="reader-empty-state" hidden>
+              <div class="empty-icon" id="reader-empty-icon"></div>
+              <strong>Aucun texte en cours</strong>
+              <p>Ouvrez un texte depuis Recherche ou votre historique. Votre position sera conservée entre les onglets et au prochain démarrage.</p>
+              <button class="primary-button" type="button" data-action="go-to-search">Choisir un texte</button>
+            </div>
+            <div class="reader-reading-tools" id="reader-reading-tools" aria-label="Outils de lecture" hidden>
+              <button class="reader-bookmark" id="reader-bookmark-button" type="button" data-action="toggle-current-favorite" aria-label="Classer le texte en favoris"><span id="reader-bookmark-icon"></span></button>
+              <span id="reader-font-size">Normal</span><div><button type="button" data-action="font-down" aria-label="Réduire la taille du texte">A−</button><button type="button" data-action="font-up" aria-label="Agrandir la taille du texte">A+</button></div>
+            </div>
+            <div class="reader-notice" id="reader-verification-notice" hidden><span id="notice-icon"></span><span>Texte non vérifié : confirmez le contenu, le statut et la consolidation auprès d’une source officielle.</span></div>
+            <div class="reader-badges" id="reader-badges"></div>
+            <h2 class="reader-title" id="reader-title"></h2>
+            <p class="reader-domain" id="reader-domain"></p>
+            <a class="source-link" id="reader-source" href="#" target="_blank" rel="noopener" hidden>Consulter la source officielle <span id="external-icon"></span></a>
+            <div class="reader-articles" id="reader-articles"></div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view page-view" id="view-repertoire" data-view="repertoire" hidden>
+        <div class="page-heading">
+          <div class="heading-icon purple-icon" id="directory-icon"></div>
+          <div><h2>Répertoire &amp; domaines juridiques</h2><p>Explorez les textes classés par branches du droit à Madagascar.</p></div>
+        </div>
+        <div id="domains-list" class="domain-list"></div>
+        <div class="section-heading"><span>Types d'actes normatifs</span></div>
+        <div id="types-grid" class="types-grid"></div>
+      </section>
+
+      <section class="view page-view" id="view-favoris" data-view="favoris" hidden>
+        <div class="page-heading">
+          <div class="heading-icon gold-icon" id="favorites-icon"></div>
+          <div><h2>Articles &amp; textes favoris</h2><p>Classez vos textes et articles dans des dossiers personnels, disponibles hors ligne.</p></div>
+          <button class="secondary-button new-folder-button" type="button" data-action="new-favorite-folder"><span>＋</span> Nouveau dossier</button>
+        </div>
+        <div id="favorites-list" class="favorite-list"></div>
+      </section>
+
+      <section class="view page-view" id="view-lexique" data-view="lexique" hidden>
+        <div class="page-heading">
+          <div class="heading-icon purple-icon" id="lexicon-icon"></div>
+          <div><h2>Lexique juridique Malagasy</h2><p>Définitions claires et vulgarisées des expressions juridiques usuelles.</p></div>
+        </div>
+        <label class="plain-search">
+          <span id="lex-search-icon"></span>
+          <input id="lexicon-search" type="search" placeholder="Rechercher un terme (ex. abrogation, préavis…)" aria-label="Rechercher un terme juridique">
+        </label>
+        <div id="lexicon-list" class="lexicon-list"></div>
+      </section>
+
+      <section class="view page-view" id="view-profil" data-view="profil" hidden>
+        <div class="profile-card">
+          <div class="profile-top">
+            <div class="avatar-wrap"><div class="avatar">JM</div><span class="online-indicator" id="profile-online"></span></div>
+            <div class="profile-identity"><h2>Juriste / Citoyen <span class="pro-badge" id="profile-pro-badge" hidden>PRO</span></h2><p><span id="pin-icon"></span> Madagascar <span class="separator">•</span> Version 1.0.9</p></div>
+          </div>
+          <div class="profile-stats">
+            <div><strong class="stat-gold" id="profile-favorites-count">0</strong><span>Favoris</span></div>
+            <div><strong class="stat-lavender" id="profile-text-count">0</strong><span>Textes locaux</span></div>
+            <div><strong class="stat-green" id="profile-offline-label">100%</strong><span>Hors ligne</span></div>
+          </div>
+        </div>
+
+        <section class="account-card" aria-label="Votre abonnement" id="account-card">
+          <div class="account-plan-row"><span class="account-plan-icon">⚖</span><div><span class="account-plan-kicker">VOTRE ACCÈS</span><strong id="profile-plan-title">Mode gratuit</strong></div><span class="account-plan-badge" id="profile-plan-badge">FREEMIUM</span></div>
+          <p class="account-email" id="profile-account-email"></p>
+          <p class="account-plan-detail" id="profile-plan-detail">Le Lexique est gratuit; cinq textes sont accessibles sans abonnement.</p>
+          <div class="account-actions"><button class="primary-button" id="profile-upgrade-button" type="button" data-action="profile-upgrade">Souscrire via WhatsApp</button><button class="secondary-button" id="profile-login-button" type="button" data-action="reauth" hidden>Se connecter</button><button class="account-logout" id="profile-logout-button" type="button" data-action="logout">Se déconnecter</button></div>
+        </section>
+
+        <section class="settings-section contact-section" aria-label="Nous contacter"><h3>Nous contacter</h3><div class="settings-card contact-links"><a href="https://facebook.com/groups/3972422733016505/?mibextid=rS40aB7S9Ucbxw6v" target="_blank" rel="noopener">Groupe Facebook · Mianatra Droit</a><a href="https://www.facebook.com/profile.php?id=61551872467708" target="_blank" rel="noopener">Page Facebook · Mianatra Droit</a><a href="https://chat.whatsapp.com/FpntvEz8vjRACqeLYdMlmT" target="_blank" rel="noopener">Groupe WhatsApp · Mianatra Droit</a><a href="mailto:mianatradroit@gmail.com">Email · mianatradroit@gmail.com</a><button class="setting-row" type="button" data-action="help-whatsapp"><span class="setting-copy"><strong>Aide urgente / téléphone perdu</strong><small>Contacter l’assistance sur WhatsApp</small></span></button></div></section>
+
+        <div class="settings-section">
+          <h3>Affichage &amp; expérience</h3>
+          <div class="settings-card">
+            <button class="setting-row" data-action="theme">
+              <span class="setting-icon moon-bg" id="profile-theme-icon"></span>
+              <span class="setting-copy"><strong>Mode sombre</strong><small>Adapter l'affichage aux environnements sombres</small></span>
+              <span class="toggle" id="theme-toggle"><span></span></span>
+            </button>
+            <button class="setting-row" data-action="font-size">
+              <span class="setting-icon type-bg" id="font-icon"></span>
+              <span class="setting-copy"><strong>Taille du texte juridique</strong><small>Ajuster la lisibilité dans le lecteur</small></span>
+              <span class="setting-value" id="font-size-label">Normal</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Base &amp; synchronisation</h3>
+          <div class="storage-card">
+            <div class="storage-top">
+              <span class="setting-icon storage-bg" id="database-icon"></span>
+              <span class="setting-copy"><strong>Base locale intégrée</strong><small id="storage-summary">Chargement…</small></span>
+              <span class="active-pill" id="storage-state">Active</span>
+            </div>
+            <div class="storage-meter"><div><span>Cache local utilisé</span><span id="storage-size">—</span></div><div class="meter-track"><span id="storage-meter-fill"></span></div></div>
+            <div class="sync-meta"><span>Dernière synchronisation</span><strong id="last-sync-label">Jamais</strong></div>
+            <button class="primary-sync" id="sync-button" data-action="sync"><span id="sync-icon"></span><span id="sync-label">Vérifier les mises à jour</span></button>
+            <p class="sync-note" id="sync-note">Configurez Supabase dans <code>config.js</code> pour activer la synchronisation distante.</p>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Informations &amp; support</h3>
+          <div class="settings-card info-card">
+            <button class="setting-row" data-action="admin-info"><span class="setting-icon admin-bg" id="admin-profile-icon"></span><span class="setting-copy"><strong>Administration des textes</strong><small>Gestion sécurisée via Supabase</small></span><span class="chevron" id="chevron-icon"></span></button>
+            <button class="setting-row" data-action="legal-info"><span class="setting-icon legal-bg" id="legal-icon"></span><span class="setting-copy"><strong>Mentions légales &amp; crédits</strong><small>Limites et source des données</small></span><span class="chevron" id="chevron-icon-two"></span></button>
+          </div>
+        </div>
+        <div class="profile-footer"><strong>Mada Base Légale · Madagascar</strong><span>Répertoire consultable hors ligne • Version 1.0.9</span><span class="warning-copy">Outil d'information, ne remplace pas la publication officielle ni un conseil juridique.</span></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navigation principale">
+      <button class="nav-item nav-active" data-tab="recherche"><span class="nav-icon" id="nav-search-icon"></span><span>Recherche</span></button>
+      <button class="nav-item" data-tab="repertoire"><span class="nav-icon" id="nav-directory-icon"></span><span>Répertoire</span></button>
+      <button class="nav-item" data-tab="lecture"><span class="nav-icon" id="nav-reading-icon"></span><span>Lecture</span></button>
+      <button class="nav-item" data-tab="favoris"><span class="nav-icon bookmark-nav" id="nav-favorites-icon"></span><span>Favoris</span><i class="nav-dot" id="favorites-dot" hidden></i></button>
+      <button class="nav-item" data-tab="lexique"><span class="nav-icon" id="nav-lexicon-icon"></span><span>Lexique</span></button>
+      <button class="nav-item" data-tab="profil"><span class="nav-icon" id="nav-profile-icon"></span><span>Profil</span></button>
+    </nav>
+  </div>
+
+  <div class="overlay welcome-overlay" id="welcome-overlay" hidden inert aria-hidden="true">
+    <section class="welcome-sheet" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+      <div class="welcome-mark" aria-hidden="true">✓</div>
+      <span class="auth-eyebrow">COMPTE CRÉÉ</span>
+      <h2 id="welcome-title">Bienvenue sur Mada Base Légale</h2>
+      <p id="welcome-copy">Votre compte est créé avec un accès Freemium. Choisissez comment continuer.</p>
+      <p class="welcome-email" id="welcome-email"></p>
+      <button class="primary-button welcome-primary" type="button" data-action="welcome-whatsapp">Débloquer l’accès Pro</button>
+      <button class="secondary-button welcome-secondary" type="button" data-action="continue-free">Continuer en mode gratuit</button>
+      <small>Le Lexique juridique reste gratuit et illimité.</small>
+    </section>
+  </div>
+
+  <div class="overlay pro-required-overlay" id="pro-required-overlay" hidden inert aria-hidden="true">
+    <section class="pro-required-sheet" role="dialog" aria-modal="true" aria-labelledby="pro-required-title">
+      <header class="pro-required-header"><span class="pro-required-icon" aria-hidden="true">🔒</span><button class="round-close" type="button" data-action="close-pro-required" aria-label="Fermer">×</button></header>
+      <span class="auth-eyebrow">ABONNEMENT MADA BASE LÉGALE</span>
+      <h2 id="pro-required-title">Contenu réservé aux abonnés Pro</h2>
+      <p>Accédez à l’intégralité des textes de loi, aux résumés et aux fonctionnalités IA avancées.</p>
+      <p class="pro-required-law" id="pro-required-law" hidden></p>
+      <button class="primary-button pro-whatsapp-button" type="button" data-action="pro-required-whatsapp">Souscrire via WhatsApp</button>
+      <button class="secondary-button pro-close-button" type="button" data-action="close-pro-required">Fermer</button>
+    </section>
+  </div>
+
+  <div class="overlay preview-overlay" id="preview-overlay" hidden aria-hidden="true">
+    <section class="preview-sheet" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+      <header class="preview-header">
+        <span class="preview-mark" id="preview-mark"></span>
+        <div class="preview-heading"><div class="preview-badges" id="preview-badges"></div><h2 id="preview-title"></h2></div>
+        <button class="round-close" data-action="close-preview" aria-label="Fermer"><span id="preview-close-icon"></span></button>
+      </header>
+      <div class="preview-body" id="preview-body"></div>
+      <footer class="preview-actions" id="preview-actions"><button class="copy-icon-button" data-action="copy-preview" aria-label="Copier l'aperçu" title="Copier"><span id="copy-icon"></span></button><button class="secondary-button" id="preview-expand-button" data-action="preview-expand"><span id="preview-expand-icon"></span><span id="preview-expand-label">Afficher jusqu’à 5 articles</span></button><button class="primary-button" id="preview-open-law" data-action="open-preview-law">Ouvrir le texte <span id="arrow-icon"></span></button></footer>
+    </section>
+  </div>
+
+  <div class="overlay favorites-picker-overlay" id="favorites-picker-overlay" hidden aria-hidden="true">
+    <section class="info-sheet favorites-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="favorite-picker-title">
+      <header class="info-header"><h2 id="favorite-picker-title">Classer dans un dossier</h2><button class="round-close" data-action="close-favorites-picker" aria-label="Fermer">×</button></header>
+      <p class="dialog-help" id="favorite-picker-description">Choisissez le dossier de destination.</p>
+      <div class="favorite-folder-options" id="favorite-folder-options"></div>
+      <button class="secondary-button picker-create-button" id="favorite-picker-new-folder" type="button" data-action="show-favorite-folder-form">＋ Créer un dossier</button>
+      <form class="favorite-folder-form" id="favorite-folder-form" hidden>
+        <label class="field"><span>Nom du dossier</span><input id="favorite-folder-name" maxlength="48" required placeholder="Ex. Droit du travail"></label>
+        <div class="dialog-actions"><button class="secondary-button" type="button" data-action="cancel-favorite-folder-form">Annuler</button><button class="primary-button" id="favorite-folder-save" type="submit">Créer le dossier</button></div>
+      </form>
+      <button class="secondary-button dialog-dismiss" type="button" data-action="close-favorites-picker">Fermer</button>
+    </section>
+  </div>
+
+  <div class="overlay copy-dialog-overlay" id="copy-dialog-overlay" hidden aria-hidden="true">
+    <section class="info-sheet copy-dialog-sheet" role="dialog" aria-modal="true" aria-labelledby="copy-dialog-title">
+      <header class="info-header"><h2 id="copy-dialog-title">Copier l'article</h2><button class="round-close" data-action="close-copy-dialog" aria-label="Fermer">×</button></header>
+      <p class="dialog-help" id="copy-article-description"></p>
+      <button class="copy-choice" type="button" data-action="copy-article-compact"><span class="copy-choice-icon">A</span><span><strong>Article + numéro + contenu</strong><small>Format court pour partage rapide.</small></span></button>
+      <button class="copy-choice" type="button" data-action="copy-article-complete"><span class="copy-choice-icon">B</span><span><strong>Article + référence complète + contenu</strong><small>Inclut le titre, le code et le domaine de la loi.</small></span></button>
+      <button class="secondary-button dialog-dismiss" type="button" data-action="close-copy-dialog">Annuler</button>
+    </section>
+  </div>
+
+  <div class="overlay definition-bottom-overlay" id="definition-bottom-overlay" hidden aria-hidden="true">
+    <section class="definition-bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="definition-sheet-term">
+      <div class="bottom-sheet-grabber" aria-hidden="true"></div>
+      <header class="definition-sheet-header"><div><span class="eyebrow">LEXIQUE JURIDIQUE</span><h2 id="definition-sheet-term"></h2><small class="definition-sheet-category" id="definition-sheet-category"></small></div><button class="round-close" data-action="close-definition-sheet" aria-label="Fermer">×</button></header>
+      <div class="definition-sheet-content" id="definition-sheet-content"></div>
+      <button class="secondary-button definition-lookup" type="button" data-action="lookup-definition-term">Voir dans le Lexique</button>
+    </section>
+  </div>
+
+  <div class="overlay toc-overlay" id="toc-overlay" hidden aria-hidden="true">
+    <section class="toc-drawer" role="dialog" aria-modal="true" aria-labelledby="toc-title">
+      <header class="toc-header"><div><span class="eyebrow">NAVIGATION DU TEXTE</span><h2 id="toc-title">Table des matières</h2><p id="toc-subtitle"></p></div><button class="round-close" type="button" data-action="close-toc" aria-label="Fermer le sommaire">×</button></header>
+      <nav class="toc-list" id="toc-list" aria-label="Titres, chapitres et articles"></nav>
+    </section>
+  </div>
+
+  <div class="overlay history-overlay" id="reading-history-overlay" hidden aria-hidden="true">
+    <section class="history-sheet" role="dialog" aria-modal="true" aria-labelledby="reader-history-title">
+      <header class="history-sheet-header"><div><span class="eyebrow">REPRISE RAPIDE</span><h2 id="reader-history-title">Dernières lectures</h2></div><button class="round-close" type="button" data-action="close-reading-history" aria-label="Fermer l’historique">×</button></header>
+      <div class="reader-history-list" id="reader-history-list"></div>
+      <button class="secondary-button history-clear-button" id="history-clear-button" type="button" data-action="clear-reading-history">Effacer l’historique</button>
+    </section>
+  </div>
+
+  <div class="overlay info-overlay" id="info-overlay" hidden aria-hidden="true">
+    <section class="info-sheet" role="dialog" aria-modal="true" aria-labelledby="info-title">
+      <header class="info-header"><h2 id="info-title">Information</h2><button class="round-close" data-action="close-info" aria-label="Fermer"><span id="info-close-icon"></span></button></header>
+      <div class="info-body" id="info-body"></div>
+      <button class="primary-button info-ok" data-action="close-info">Compris</button>
+    </section>
+  </div>
+
+  <div class="overlay info-overlay update-overlay" id="update-overlay" hidden aria-hidden="true">
+    <section class="info-sheet update-sheet" role="dialog" aria-modal="true" aria-labelledby="update-title">
+      <header class="info-header"><h2 id="update-title">Mise à jour disponible</h2><button class="round-close" data-action="defer-update" aria-label="Plus tard"><span id="update-close-icon"></span></button></header>
+      <div class="update-intro"><span id="update-icon"></span><span>Votre cache reste disponible hors ligne; rien ne sera remplacé avant votre confirmation.</span></div>
+      <div class="info-body update-body" id="update-body"></div>
+      <div class="update-actions"><button class="secondary-button" data-action="defer-update">Plus tard</button><button class="primary-button" data-action="apply-update">Mettre à jour</button></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

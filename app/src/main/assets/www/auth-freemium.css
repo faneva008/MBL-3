@@ -1,0 +1,127 @@
+#app-shell[hidden],
+.auth-gate[hidden],
+.account-plan-badge[hidden],
+.account-actions [hidden],
+.pro-required-law[hidden] {
+  display: none !important;
+}
+
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  overflow: auto;
+  padding: max(24px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 85% 9%, rgba(111, 91, 242, .34), transparent 32%),
+    linear-gradient(150deg, #151342 0%, #211b65 58%, #302678 100%);
+  color: #fff;
+  overscroll-behavior: contain;
+}
+.auth-brand { width: min(100%, 420px); display: flex; align-items: center; gap: 11px; }
+.auth-brand img { width: 47px; height: 47px; border-radius: 15px; object-fit: contain; background: rgba(255,255,255,.12); padding: 4px; }
+.auth-brand strong, .auth-brand span { display: block; }
+.auth-brand strong { font-size: 15px; letter-spacing: .02em; }
+.auth-brand span { margin-top: 3px; color: #c9c7ed; font-size: 10px; }
+.auth-card {
+  width: min(100%, 420px);
+  padding: 25px 22px 21px;
+  border: 1px solid rgba(255,255,255,.62);
+  border-radius: 26px;
+  background: rgba(255,255,255,.97);
+  color: #171a2c;
+  box-shadow: 0 20px 65px rgba(5, 4, 35, .31);
+}
+.auth-eyebrow { display: block; color: #5b50ce; font-size: 9px; line-height: 1.3; font-weight: 850; letter-spacing: .16em; }
+.auth-card h1 { margin: 7px 0 8px; color: #191747; font-size: 24px; line-height: 1.2; letter-spacing: -.03em; }
+.auth-card > p:not(.auth-message) { color: #758092; font-size: 11px; line-height: 1.55; }
+.auth-card > p#auth-copy { margin: 0 0 18px; }
+.auth-field { display: grid; gap: 6px; margin: 12px 0; color: #3e4658; font-size: 10px; font-weight: 750; }
+.auth-field input { width: 100%; height: 46px; padding: 0 13px; border: 1px solid #dfe4ed; border-radius: 13px; background: #fbfcfe; color: #181b2d; font-size: 13px; outline: none; }
+.auth-field input:focus { border-color: #8279e8; box-shadow: 0 0 0 3px rgba(91,78,224,.12); }
+.auth-field input::placeholder { color: #a3abba; }
+.auth-submit, .welcome-primary, .pro-whatsapp-button { width: 100%; min-height: 46px; margin-top: 7px; border: 0; border-radius: 14px; background: linear-gradient(135deg,#5549d8,#3e35b2); color: #fff; font-size: 12px; font-weight: 800; box-shadow: 0 6px 17px rgba(81,68,222,.2); cursor: pointer; }
+.auth-submit:disabled { opacity: .52; cursor: wait; }
+.auth-message { margin: 11px 0 4px; padding: 10px 11px; border: 1px solid #f0c8ca; border-radius: 11px; background: #fff0f0; color: #9d3442; font-size: 10px; line-height: 1.5; }
+.auth-message[hidden] { display: none !important; }
+.auth-switch-line { margin: 17px 0 0; text-align: center; font-size: 10px !important; }
+.auth-switch-line button { border: 0; padding: 4px 2px; background: transparent; color: #5247cf; font-size: inherit; font-weight: 800; cursor: pointer; }
+.auth-switch-line button:disabled { opacity: .5; }
+.auth-security-note { margin: 14px 0 0 !important; padding-top: 13px; border-top: 1px solid #edf0f5; font-size: 9px !important; text-align: center; }
+.auth-bootstrap-status { min-height: 13px; margin: 8px 0 0 !important; color: #9299a8 !important; font-size: 9px !important; text-align: center; }
+.auth-footer { width: min(100%, 420px); color: rgba(228,226,255,.75); font-size: 9px; text-align: center; }
+
+.welcome-overlay { z-index: 91; align-items: center; padding: 18px; }
+.welcome-sheet, .pro-required-sheet { width: min(calc(100vw - 30px), 430px); max-height: min(88dvh, 700px); overflow: auto; padding: 24px 20px 19px; border: 1px solid var(--line); border-radius: 25px; background: var(--surface); color: var(--ink); box-shadow: 0 20px 65px rgba(10,15,34,.23); }
+.welcome-sheet { text-align: center; }
+.welcome-mark { width: 49px; height: 49px; display: grid; place-items: center; margin: 0 auto 13px; border-radius: 17px; background: #e6f8f0; color: #178961; font-size: 25px; font-weight: 900; }
+.welcome-sheet h2 { margin: 7px 0; color: var(--ink); font-size: 21px; line-height: 1.3; }
+.welcome-sheet > p, .pro-required-sheet > p { margin: 8px 0 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.welcome-email { overflow-wrap: anywhere; color: #5a50c8 !important; font-weight: 750; }
+.welcome-primary { margin-top: 12px; }
+.welcome-secondary { width: 100%; min-height: 44px; margin-top: 9px; }
+.welcome-sheet > small { display: block; margin-top: 13px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.pro-required-overlay { z-index: 92; align-items: center; padding: 18px; }
+.pro-required-sheet { text-align: left; }
+.pro-required-header { display: flex; align-items: center; justify-content: space-between; margin: -5px 0 9px; }
+.pro-required-icon { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 15px; background: #fff3d6; font-size: 19px; }
+.pro-required-sheet h2 { margin: 7px 0 8px; color: var(--ink); font-size: 20px; line-height: 1.3; }
+.pro-required-sheet > p { margin-bottom: 11px; }
+.pro-required-law { padding: 10px 12px; border-radius: 12px; background: var(--surface-soft); color: var(--ink) !important; font-weight: 750; overflow-wrap: anywhere; }
+.pro-whatsapp-button { margin-top: 9px; }
+.pro-close-button { width: 100%; min-height: 43px; margin-top: 9px; }
+
+.account-card { margin: 16px 17px 20px; padding: 16px; border: 1px solid #e6e4fa; border-radius: 20px; background: linear-gradient(145deg,#fff 0%,#f7f6ff 100%); box-shadow: var(--shadow); }
+.account-plan-row { display: flex; align-items: center; gap: 10px; }
+.account-plan-icon { width: 39px; height: 39px; flex: 0 0 39px; display: grid; place-items: center; border-radius: 13px; background: #eeecff; color: #5549d8; font-size: 20px; }
+.account-plan-row > div { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.account-plan-kicker { color: #7e83a0; font-size: 8px; font-weight: 850; letter-spacing: .13em; }
+.account-plan-row strong { color: var(--ink); font-size: 14px; line-height: 1.25; }
+.account-plan-badge { padding: 5px 8px; border: 1px solid #e0dafe; border-radius: 999px; background: #eeecff; color: #5144bd; font-size: 8px; font-weight: 850; letter-spacing: .06em; }
+.account-plan-badge.is-pro { border-color: #c8ead9; background: #e7f8ef; color: #19774f; }
+.account-email { margin: 10px 0 4px; color: #5a50c8; font-size: 10px; font-weight: 750; overflow-wrap: anywhere; }
+.account-plan-detail { margin: 5px 0 12px; color: #748093; font-size: 10px; line-height: 1.5; }
+.account-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.account-actions .primary-button { grid-column: 1 / -1; width: 100%; min-height: 42px; height: auto; padding: 9px 12px; font-size: 10px; }
+.account-actions .secondary-button { min-height: 39px; height: auto; padding: 7px; font-size: 10px; }
+.account-logout { min-height: 39px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: #697487; font-size: 10px; font-weight: 750; cursor: pointer; }
+.law-access-badge { display: inline-flex; align-items: center; flex: 0 0 auto; gap: 4px; margin-left: 4px; padding: 4px 7px; border: 1px solid #e4e0ff; border-radius: 999px; background: #f2f0ff; color: #574cc5; font-size: 8px; font-weight: 850; letter-spacing: .035em; }
+.law-access-badge.is-free { border-color: #ccebdc; background: #ecf9f2; color: #19764f; }
+.law-access-badge.is-pro-active { border-color: #ead9a9; background: #fff7df; color: #8b6411; }
+.card-topline .status-chip { max-width: 58%; overflow: hidden; text-overflow: ellipsis; }
+.card-topline .category-label { min-width: 0; white-space: normal; }
+
+.dark .auth-gate { background: radial-gradient(circle at 85% 9%, rgba(111,91,242,.34),transparent 32%),linear-gradient(150deg,#0d1424 0%,#171b42 58%,#20235b 100%); }
+.dark .auth-card { border-color: #344159; background: #182337; color: #edf1f8; }
+.dark .auth-card h1, .dark .auth-field { color: #f0f3fa; }
+.dark .auth-card > p, .dark .auth-field input { color: #aab4c2; }
+.dark .auth-field input { border-color: #344159; background: #101b2d; }
+.dark .auth-field input:focus { border-color: #8279e8; }
+.dark .auth-switch-line button { color: #c3bdff; }
+.dark .auth-security-note { border-color: #29364a; }
+.dark .welcome-mark { background: #173d32; color: #72d9af; }
+.dark .account-card { border-color: #34365f; background: linear-gradient(145deg,#182337 0%,#202342 100%); }
+.dark .account-plan-icon,.dark .account-plan-badge:not(.is-pro) { background: #28284e; color: #c8c2ff; border-color: #454080; }
+.dark .account-plan-detail { color: #a4afbe; }
+.dark .account-logout { border-color: #344159; background: #162338; color: #c4cede; }
+.dark .law-access-badge { background: #272651; color: #d1ceff; border-color: #454080; }
+.dark .law-access-badge.is-free { background: #173d32; color: #72d9af; border-color: #285f4d; }
+.dark .law-access-badge.is-pro-active { background: #3b321e; color: #f0c95e; border-color: #6b5722; }
+
+@media (max-height: 700px) {
+  .auth-gate { justify-content: flex-start; gap: 13px; }
+  .auth-card { padding: 19px 18px 15px; }
+  .auth-card h1 { font-size: 21px; }
+  .auth-field { margin: 9px 0; }
+  .auth-field input { height: 43px; }
+}
+
+/* MBL v1.1.0 accessibility overrides */
+.dark .lexicon-entry, .dark .lexicon-entry p, .dark .lexicon-definition { color: #F8FAFC; }
+.clear-filter, [data-action="clear-filter"] { color: #EF4444 !important; border-color: #EF4444 !important; }
+.account-plan-badge.is-pro { border-color:#d6b65e; background:linear-gradient(135deg,#fff4c2,#d6ad43); color:#5b3c06; }

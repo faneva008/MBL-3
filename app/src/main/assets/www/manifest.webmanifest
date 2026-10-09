@@ -1,0 +1,14 @@
+{
+  "name": "Mada Base Légale — Madagascar",
+  "short_name": "Mada Base Légale",
+  "description": "Répertoire juridique malagasy consultable hors ligne.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f9fc",
+  "theme_color": "#191747",
+  "icons": [
+    { "src": "./mbl-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

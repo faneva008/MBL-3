@@ -1,0 +1,17 @@
+MADA BASE LÉGALE — Android source package prepared for rebuild
+Version cible: 1.1.0-debug
+Version code cible: 11
+Package debug: mg.tenikolo.droit.debug
+Minimum Android: 6.0 / API 23
+Target Android: API 35
+
+Fonctions déjà présentes dans le code source :
+- Authentification Supabase e-mail/mot de passe et session persistante WebView localStorage.
+- Profil pending à l’inscription et revalidation du statut à chaque lancement.
+- Lexique gratuit et gating Freemium limité à cinq textes.
+- Accès Pro seulement si status=active et expires_at est une date future valide.
+- Lecture des textes payants protégée par les règles RLS définies dans la migration mobile_freemium_auth.sql.
+- Numéro WhatsApp dynamique depuis app_config, valeur de secours 261340517635 et message prérempli via lien wa.me.
+
+Validation locale: tests Node mobile 14/14 réussis. La compilation APK n’a pas été réalisée dans cet environnement car Gradle 8.10.2 doit être téléchargé et l’accès réseau est indisponible.
+Avant publication: appliquer/vérifier les migrations SQL sur le projet Supabase réel, puis tester l’APK sur appareil Android.
