@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mbl-9yiy7kro1-faneva008.vercel.app/sitemap.xml
+Sitemap: https://mbl-web.vercel.app/sitemap.xml
