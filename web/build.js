@@ -11,4 +11,9 @@ for (const [relativePath, content] of Object.entries(entries)) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, content, 'utf8');
 }
-console.log(`Prepared ${Object.keys(entries).length} static files`);
+for (const seoFile of ['robots.txt', 'sitemap.xml']) {
+  const source = path.join(__dirname, seoFile);
+  const target = path.join(out, seoFile);
+  if (fs.existsSync(source)) fs.copyFileSync(source, target);
+}
+console.log(`Prepared ${Object.keys(entries).length} static files plus SEO files`);
