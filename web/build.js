@@ -95,7 +95,14 @@ function withSeoPage(template, record, slug) {
     .replace('<div class="reader-meta" id="readerMeta"></div>', `<div class="reader-meta" id="readerMeta">${metadata}</div>`)
     .replace('<p id="readerSummary"></p>', `<p id="readerSummary">${escapeHtml(String(structure.summary || record.status_note || ''))}</p>`)
     .replace('<section class="reader-content" id="readerArticles" aria-live="polite"></section>', `<section class="reader-content" id="readerArticles" aria-live="polite">${staticArticles(structure)}</section>`)
-    .replace('texte.html?id=', `textes/${slug}.html?id=`);
+    .replace('texte.html?id=', `textes/${slug}.html?id=`)
+    .replace('href="styles.css"', 'href="../styles.css"')
+    .replace('src="config.js"', 'src="../config.js"')
+    .replace('src="app.js"', 'src="../app.js"')
+    .replace('src="reader.js"', 'src="../reader.js"')
+    .replaceAll('href="index.html', 'href="../index.html')
+    .replaceAll('href="lexique.html', 'href="../lexique.html')
+    .replaceAll('href="applications.html', 'href="../applications.html');
   return html;
 }
 
