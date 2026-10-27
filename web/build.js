@@ -42,6 +42,40 @@ function hierarchy(article) {
   return [value.book, value.title, value.chapter, value.section].filter(Boolean).join(' · ');
 }
 
+function sourceEntries(value) {
+  const values = Array.isArray(value) ? value : (value ? [value] : []);
+  return values.filter(source => source && typeof source === 'object');
+}
+
+function displayDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(date);
+}
+
+function consolidationPanel(record, structure) {
+  const sources = sourceEntries(structure.sources);
+  const status = String(structure.status_label || record.status || 'Version consolidée');
+  const officialHeader = String(structure.official_header || '').trim();
+  const references = sources.map(source => {
+    const title = String(source.title || source.name || 'Référence juridique');
+    const url = String(source.url || '').trim();
+    const verified = source.verified_at ? ` <small>Vérifiée le ${escapeHtml(displayDate(source.verified_at))}</small>` : '';
+    return url.startsWith('http')
+      ? `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a>${verified}</li>`
+      : `<li>${escapeHtml(title)}${verified}</li>`;
+  }).join('');
+  const amended = record.last_amended_at ? `<span><strong>Dernier effet juridique intégré</strong><em>${escapeHtml(displayDate(record.last_amended_at))}</em></span>` : '';
+  const updated = record.updated_at ? `<span><strong>Fiche consolidée le</strong><em>${escapeHtml(displayDate(record.updated_at))}</em></span>` : '';
+  return `<section class="consolidation-card" aria-labelledby="consolidationTitle">
+    <div class="consolidation-heading"><div><span class="eyebrow">CONSOLIDATION JURIDIQUE</span><h2 id="consolidationTitle">${escapeHtml(status)}</h2></div><span class="consolidation-mark" aria-hidden="true">✓</span></div>
+    <p>Cette version intègre les effets des textes modificatifs, abrogatifs et complémentaires renseignés dans les références de cette fiche.</p>
+    <div class="consolidation-dates">${amended}${updated}</div>
+    ${officialHeader ? `<details><summary>Voir la base juridique et les références</summary><p class="official-header">${escapeHtml(officialHeader)}</p>${references ? `<ul class="source-list">${references}</ul>` : ''}</details>` : (references ? `<details><summary>Voir les références de consolidation</summary><ul class="source-list">${references}</ul></details>` : '')}
+  </section>`;
+}
+
 function staticArticles(structure) {
   const articles = Array.isArray(structure?.articles) ? structure.articles : [];
   let previous = '';
@@ -73,6 +107,7 @@ function withSeoPage(template, record, slug) {
   const title = String(record.title || structure.title || 'Texte juridique');
   const description = String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim().slice(0, 155);
   const canonical = `${siteBase}/textes/${slug}.html`;
+  const sources = sourceEntries(structure.sources);
   const metadata = [record.category, record.status].filter(Boolean).map(value => `<span>${escapeHtml(value)}</span>`).join('');
   const structuredData = {
     '@context': 'https://schema.org',
@@ -82,6 +117,7 @@ function withSeoPage(template, record, slug) {
     inLanguage: 'fr-MG',
     url: canonical,
     dateModified: record.updated_at || record.last_amended_at || undefined,
+    isBasedOn: sources.map(source => source.url).filter(url => String(url || '').startsWith('http')),
     isPartOf: { '@type': 'WebSite', name: 'Mada Base Légale', url: siteBase },
     publisher: { '@type': 'Organization', name: 'Rohy — Juritech' }
   };
@@ -94,6 +130,7 @@ function withSeoPage(template, record, slug) {
     .replace('<h1 id="readerTitle">Chargement du texte…</h1>', `<h1 id="readerTitle">${escapeHtml(title)}</h1>`)
     .replace('<div class="reader-meta" id="readerMeta"></div>', `<div class="reader-meta" id="readerMeta">${metadata}</div>`)
     .replace('<p id="readerSummary"></p>', `<p id="readerSummary">${escapeHtml(String(structure.summary || record.status_note || ''))}</p>`)
+    .replace('</details>', `</details>${consolidationPanel(record, structure)}`)
     .replace('<section class="reader-content" id="readerArticles" aria-live="polite"></section>', `<section class="reader-content" id="readerArticles" aria-live="polite">${staticArticles(structure)}</section>`)
     .replace('texte.html?id=', `textes/${slug}.html?id=`)
     .replace('href="styles.css"', 'href="../styles.css"')
