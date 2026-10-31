@@ -202,7 +202,7 @@ function withJurisprudencePage(template, record, slug) {
     .replace('<h1 id="jurisTitle">Chargement de la décision…</h1>', `<h1 id="jurisTitle">${escapeHtml(title)}</h1>`)
     .replace('<p class="juris-lede" id="jurisLead"></p>', `<p class="juris-lede" id="jurisLead">${escapeHtml(record.fiche?.question || record.subject || '')}</p>`)
     .replace('<div class="juris-meta" id="jurisMeta"></div>', `<div class="juris-meta" id="jurisMeta">${meta}</div>`)
-    .replace('<section class="juris-editorial" id="jurisEditorial"></section>', `<section class="juris-editorial" id="jurisEditorial"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><h2>Comprendre la décision</h2><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></section>`)
+    .replace('<section class="juris-editorial" id="jurisEditorial"></section>', `<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></div></details>`)
     .replace('<a id="jurisSourceLink" class="text-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Voir la source officielle ↗</a>', source.startsWith('http') ? `<a id="jurisSourceLink" class="text-link" href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer">Voir la source officielle ↗</a>` : '')
     .replace('<pre id="jurisBody"></pre>', `<pre id="jurisBody">${escapeHtml(record.body_text || '')}</pre>`);
   return html;
