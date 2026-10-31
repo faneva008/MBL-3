@@ -54,6 +54,13 @@ function displayDate(value) {
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(date);
 }
 
+function decisionTitle(record) {
+  const number = String(record.decision_number || '').trim();
+  const date = displayDate(record.decision_date);
+  const reference = number ? `Arrêt N° ${number}${date ? ` du ${date}` : ''}` : (date ? `Arrêt du ${date}` : 'Décision');
+  return `${reference} — ${String(record.title || 'Jurisprudence de Madagascar').trim()}`;
+}
+
 function consolidationPanel(record, structure) {
   const sources = sourceEntries(structure.sources);
   const status = String(structure.status_label || record.status || 'Version consolidée');
@@ -179,7 +186,7 @@ function ficheHtml(fiche) {
 }
 
 function withJurisprudencePage(template, record, slug) {
-  const title = String(record.title || 'Jurisprudence de Madagascar');
+  const title = decisionTitle(record);
   const description = String(record.fiche?.takeaway || record.subject || `Décision de jurisprudence publiée : ${title}.`).replace(/\s+/g, ' ').trim().slice(0, 155);
   const canonical = `${siteBase}/jurisprudence/${slug}.html`;
   const structuredData = {
@@ -202,7 +209,7 @@ function withJurisprudencePage(template, record, slug) {
     .replace('<h1 id="jurisTitle">Chargement de la décision…</h1>', `<h1 id="jurisTitle">${escapeHtml(title)}</h1>`)
     .replace('<p class="juris-lede" id="jurisLead"></p>', `<p class="juris-lede" id="jurisLead">${escapeHtml(record.fiche?.question || record.subject || '')}</p>`)
     .replace('<div class="juris-meta" id="jurisMeta"></div>', `<div class="juris-meta" id="jurisMeta">${meta}</div>`)
-    .replace('<section class="juris-editorial" id="jurisEditorial"></section>', `<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></div></details>`)
+    .replace('<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"></div></details>', `<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></div></details>`)
     .replace('<a id="jurisSourceLink" class="text-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Voir la source officielle ↗</a>', source.startsWith('http') ? `<a id="jurisSourceLink" class="text-link" href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer">Voir la source officielle ↗</a>` : '')
     .replace('<pre id="jurisBody"></pre>', `<pre id="jurisBody">${escapeHtml(record.body_text || '')}</pre>`);
   return html;
