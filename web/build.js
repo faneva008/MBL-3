@@ -87,19 +87,49 @@ function staticArticles(structure) {
   }).join('\n');
 }
 
-async function fetchJson(url, headers) {
-  const response = await fetch(url, { headers, signal: AbortSignal.timeout(30000) });
+async function fetchJson(url, headers, options = {}) {
+  const response = await fetch(url, { ...options, headers, signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error(`Supabase returned ${response.status} for ${url}`);
   return response.json();
 }
 
-async function loadPublicTexts() {
+function publicConfig() {
   const config = entries['config.js'] || '';
   const supabaseUrl = config.match(/supabaseUrl:\s*["']([^"']+)/)?.[1];
   const supabaseKey = config.match(/supabaseAnonKey:\s*["']([^"']+)/)?.[1];
   if (!supabaseUrl || !supabaseKey) throw new Error('Supabase public configuration is missing from the site bundle.');
+  return { supabaseUrl: supabaseUrl.replace(/\/$/, ''), supabaseKey };
+}
+
+async function loadPublicTexts() {
+  const { supabaseUrl, supabaseKey } = publicConfig();
   const url = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/mbl_website_public_texts?select=catalog_id,title,category,status,status_note,last_amended_at,updated_at,structure_json&limit=1000`;
   return fetchJson(url, { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` });
+}
+
+async function callPublicRpc(name, body) {
+  const { supabaseUrl, supabaseKey } = publicConfig();
+  return fetchJson(`${supabaseUrl}/rest/v1/rpc/${name}`, {
+    apikey: supabaseKey,
+    Authorization: `Bearer ${supabaseKey}`,
+    'Content-Type': 'application/json',
+    Accept: 'application/json'
+  }, { method: 'POST', body: JSON.stringify(body) });
+}
+
+async function loadPublicJurisprudence() {
+  const items = [];
+  let offset = 0;
+  do {
+    const list = await callPublicRpc('juris_web_list20', { p_query: '', p_nature: '', p_limit: 20, p_offset: offset });
+    const page = Array.isArray(list?.items) ? list.items : [];
+    items.push(...page);
+    if (!list?.has_more || !page.length) break;
+    offset += page.length;
+  } while (items.length < 1000);
+  const details = [];
+  for (const item of items) details.push(await callPublicRpc('juris_web_read20', { p_id: item.id }));
+  return details.filter(item => item && item.id);
 }
 
 function withSeoPage(template, record, slug) {
@@ -143,13 +173,50 @@ function withSeoPage(template, record, slug) {
   return html;
 }
 
-function staticSitemap(texts) {
+function ficheHtml(fiche) {
+  const fields = [['question', 'Question juridique'], ['facts', 'Faits'], ['claims', 'Prétentions et moyens'], ['holding', 'Solution'], ['reasoning', 'Motivation'], ['takeaway', 'À retenir'], ['limits', 'Limites de la fiche']];
+  return fields.filter(([key]) => fiche?.[key]).map(([key, label]) => `<section><h2>${escapeHtml(label)}</h2><p>${escapeHtml(fiche[key])}</p></section>`).join('');
+}
+
+function withJurisprudencePage(template, record, slug) {
+  const title = String(record.title || 'Jurisprudence de Madagascar');
+  const description = String(record.fiche?.takeaway || record.subject || `Décision de jurisprudence publiée : ${title}.`).replace(/\s+/g, ' ').trim().slice(0, 155);
+  const canonical = `${siteBase}/jurisprudence/${slug}.html`;
+  const structuredData = {
+    '@context': 'https://schema.org', '@type': 'LegalCase', name: title, description, inLanguage: 'fr-MG', url: canonical,
+    datePublished: record.published_at, dateModified: record.published_at,
+    isBasedOn: String(record.source_url || '').startsWith('http') ? record.source_url : undefined,
+    about: { '@type': 'Thing', name: 'Jurisprudence de Madagascar' },
+    publisher: { '@type': 'Organization', name: 'Rohy — Juritech' }
+  };
+  const meta = [['Juridiction', record.jurisdiction], ['Chambre', record.chamber], ['Décision', record.decision_number], ['Affaire', record.case_number], ['Date', displayDate(record.decision_date)], ['Solution', record.outcome]]
+    .filter(([, value]) => value).map(([label, value]) => `<span><strong>${escapeHtml(label)}</strong>${escapeHtml(value)}</span>`).join('');
+  const source = String(record.source_url || '');
+  let html = template
+    .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(description)}">`)
+    .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(description)}">`)
+    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
+    .replace('<link rel="canonical" href="https://mbl-web.vercel.app/jurisprudence.html">', `<link rel="canonical" href="${escapeHtml(canonical)}">`)
+    .replace('</head>', `<script type="application/ld+json">${jsonForScript(structuredData)}</script></head>`)
+    .replace('<h1 id="jurisTitle">Chargement de la décision…</h1>', `<h1 id="jurisTitle">${escapeHtml(title)}</h1>`)
+    .replace('<p class="juris-lede" id="jurisLead"></p>', `<p class="juris-lede" id="jurisLead">${escapeHtml(record.fiche?.question || record.subject || '')}</p>`)
+    .replace('<div class="juris-meta" id="jurisMeta"></div>', `<div class="juris-meta" id="jurisMeta">${meta}</div>`)
+    .replace('<section class="juris-editorial" id="jurisEditorial"></section>', `<section class="juris-editorial" id="jurisEditorial"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><h2>Comprendre la décision</h2><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></section>`)
+    .replace('<a id="jurisSourceLink" class="text-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Voir la source officielle ↗</a>', source.startsWith('http') ? `<a id="jurisSourceLink" class="text-link" href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer">Voir la source officielle ↗</a>` : '')
+    .replace('<pre id="jurisBody"></pre>', `<pre id="jurisBody">${escapeHtml(record.body_text || '')}</pre>`);
+  return html;
+}
+
+function staticSitemap(texts, jurisprudence = []) {
   const urls = [
     `${siteBase}/`,
     `${siteBase}/lexique.html`,
-    `${siteBase}/applications.html`
+    `${siteBase}/applications.html`,
+    `${siteBase}/jurisprudence.html`
   ];
   for (const record of texts) urls.push(`${siteBase}/textes/${slugify(record.title, record.catalog_id)}.html`);
+  for (const record of jurisprudence) urls.push(`${siteBase}/jurisprudence/${slugify(record.title, record.id)}.html`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url => `  <url><loc>${escapeHtml(url)}</loc></url>`).join('\n')}\n</urlset>\n`;
 }
 
@@ -168,6 +235,7 @@ async function main() {
   }
 
   let texts = [];
+  let jurisprudence = [];
   try {
     texts = await loadPublicTexts();
     const template = entries['texte.html'];
@@ -181,11 +249,21 @@ async function main() {
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, withSeoPage(template, record, slug), 'utf8');
     }
-    fs.writeFileSync(path.join(out, 'sitemap.xml'), staticSitemap(texts), 'utf8');
-    console.log(`Prepared ${Object.keys(entries).length} static files, ${texts.length} SEO text pages and a generated sitemap`);
+    jurisprudence = await loadPublicJurisprudence();
+    fs.writeFileSync(path.join(out, 'jurisprudence.html'), entries['jurisprudence.html'], 'utf8');
+    const jurisTemplate = entries['jurisprudence-detail.html'];
+    for (const record of jurisprudence) {
+      const slug = slugify(record.title, record.id);
+      const target = path.join(out, 'jurisprudence', `${slug}.html`);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, withJurisprudencePage(jurisTemplate, record, slug), 'utf8');
+    }
+    fs.writeFileSync(path.join(out, 'sitemap.xml'), staticSitemap(texts, jurisprudence), 'utf8');
+    console.log(`Prepared ${Object.keys(entries).length} static files, ${texts.length} SEO text pages and ${jurisprudence.length} public jurisprudence pages`);
   } catch (error) {
-    console.warn(`SEO generation skipped: ${error.message}`);
+    console.warn(`SEO generation partially skipped: ${error.message}`);
     console.warn('The base site remains deployable; rerun the build when Supabase is available.');
+    fs.writeFileSync(path.join(out, 'sitemap.xml'), staticSitemap(texts, jurisprudence), 'utf8');
     console.log(`Prepared ${Object.keys(entries).length} static files plus existing SEO files`);
   }
 }

@@ -38,9 +38,34 @@ jobs:
           python3 - <<'PY'
           import hashlib
           import json
+          import os
+          import urllib.request
+
+          url = os.environ['SUPABASE_URL'] + '/rest/v1/rpc/juris_web_list20'
+          headers = {
+              'apikey': os.environ['SUPABASE_ANON_KEY'],
+              'Authorization': 'Bearer ' + os.environ['SUPABASE_ANON_KEY'],
+              'Content-Type': 'application/json',
+          }
+          items = []
+          offset = 0
+          while True:
+              request = urllib.request.Request(url, data=json.dumps({
+                  'p_query': '', 'p_nature': '', 'p_limit': 20, 'p_offset': offset
+              }).encode(), headers=headers, method='POST')
+              with urllib.request.urlopen(request) as response:
+                  page = json.load(response)
+              current = page.get('items', [])
+              items.extend({key: item.get(key) for key in (
+                  'id', 'revision', 'title', 'source_code', 'decision_date', 'reviewed_at'
+              )} for item in current)
+              if not page.get('has_more') or not current:
+                  break
+              offset += len(current)
+
           with open('/tmp/mbl-content.json', encoding='utf-8') as handle:
-              rows = json.load(handle)
-          canonical = json.dumps(rows, sort_keys=True, separators=(',', ':')).encode()
+              texts = json.load(handle)
+          canonical = json.dumps({'texts': texts, 'jurisprudence': items}, sort_keys=True, separators=(',', ':')).encode()
           digest = hashlib.sha256(canonical).hexdigest()
           with open('web/.content-sync-state', 'w', encoding='utf-8') as handle:
               handle.write(digest + '\n')
