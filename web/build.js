@@ -110,8 +110,27 @@ function publicConfig() {
 
 async function loadPublicTexts() {
   const { supabaseUrl, supabaseKey } = publicConfig();
-  const url = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/mbl_website_public_texts?select=catalog_id,title,category,status,status_note,last_amended_at,updated_at,structure_json&limit=1000`;
-  return fetchJson(url, { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` });
+  const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
+  const rows = [];
+  const pageSize = 100;
+  for (let offset = 0; offset < 2000; offset += pageSize) {
+    const url = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/mbl_website_public_texts?select=catalog_id,title,category,status,status_note,last_amended_at,updated_at,structure_json&limit=${pageSize}&offset=${offset}`;
+    let page;
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        page = await fetchJson(url, headers);
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      }
+    }
+    if (!page) throw lastError || new Error('Impossible de charger les textes publics.');
+    rows.push(...page);
+    if (page.length < pageSize) break;
+  }
+  return rows;
 }
 
 async function callPublicRpc(name, body) {
