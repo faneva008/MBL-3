@@ -179,6 +179,7 @@ function withSeoPage(template, record, slug) {
   };
   let html = template
     .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(description)}">`)
+    .replace('<meta name="robots" content="noindex,follow">', '')
     .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
     .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(description)}">`)
     .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
@@ -220,6 +221,7 @@ function withJurisprudencePage(template, record, slug) {
   const source = String(record.source_url || '');
   let html = template
     .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(description)}">`)
+    .replace('<meta name="robots" content="noindex,follow">', '')
     .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
     .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(description)}">`)
     .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
