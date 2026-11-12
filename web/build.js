@@ -91,7 +91,8 @@ function staticArticles(structure) {
     const current = hierarchy(article);
     const heading = current && current !== previous ? `<h2 class="reader-section-heading">${escapeHtml(current)}</h2>` : '';
     previous = current || previous;
-    return `${heading}<article class="legal-article"><h3>${escapeHtml(articleTitle(article, index))}</h3><div class="legal-article-text">${escapeHtml(articleText(article)).replace(/\r?\n/g, '<br>')}</div></article>`;
+    const articleId = String(article?.id || `article-${article?.number || index + 1}`).replace(/[^a-zA-Z0-9_-]+/g, '-');
+    return `${heading}<article class="legal-article" id="${escapeHtml(articleId)}" data-article-number="${escapeHtml(article?.number || index + 1)}"><h3>${escapeHtml(articleTitle(article, index))}</h3><div class="legal-article-text">${escapeHtml(articleText(article)).replace(/\r?\n/g, '<br>')}</div></article>`;
   }).join('\n');
 }
 
@@ -162,7 +163,8 @@ async function loadPublicJurisprudence() {
 function withSeoPage(template, record, slug) {
   const structure = record.structure_json && typeof record.structure_json === 'object' ? record.structure_json : {};
   const title = String(record.title || structure.title || 'Texte juridique');
-  const description = String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim().slice(0, 155);
+  const category = String(record.category || structure.domain || '').replace(/\s+/g, ' ').trim();
+  const description = `${category ? `${category} — ` : ''}${String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim()}`.slice(0, 155);
   const canonical = `${siteBase}/textes/${slug}.html`;
   const sources = sourceEntries(structure.sources);
   const metadata = [record.category, record.status].filter(Boolean).map(value => `<span>${escapeHtml(value)}</span>`).join('');
