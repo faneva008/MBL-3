@@ -5,6 +5,7 @@ const zlib = require('node:zlib');
 const compressed = path.join(__dirname, 'site.json.br');
 const out = path.resolve(__dirname, 'dist');
 const entries = JSON.parse(zlib.brotliDecompressSync(fs.readFileSync(compressed)).toString('utf8'));
+const fallbackCatalogPath = path.join(__dirname, 'seo-fallback-texts.json');
 const siteBase = String(process.env.PUBLIC_SITE_URL || 'https://mbl-web.vercel.app').replace(/\/$/, '');
 
 function escapeHtml(value) {
@@ -246,11 +247,16 @@ function withJurisprudencePage(template, record, slug) {
   return html;
 }
 
+function loadFallbackTexts() {
+  if (!fs.existsSync(fallbackCatalogPath)) return [];
+  try { return JSON.parse(fs.readFileSync(fallbackCatalogPath, 'utf8')); } catch (_) { return []; }
+}
+
 function staticCatalogCards(texts) {
   return texts.map(record => {
     const structure = record.structure_json && typeof record.structure_json === 'object' ? record.structure_json : {};
     const title = String(record.title || structure.title || 'Texte juridique');
-    const slug = slugify(title, record.catalog_id);
+    const slug = record.slug || slugify(title, record.catalog_id);
     const category = String(record.category || structure.domain || 'Droit malagasy');
     const summary = String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim();
     const status = String(record.status || 'Publié');
@@ -329,6 +335,30 @@ async function main() {
     console.log(`Prepared ${Object.keys(entries).length} static files, ${texts.length} SEO text pages and ${jurisprudence.length} public jurisprudence pages`);
   } catch (error) {
     console.warn(`SEO generation partially skipped: ${error.message}`);
+    const fallbackTexts = texts.length ? texts : loadFallbackTexts();
+    if (fallbackTexts.length) {
+      texts = fallbackTexts;
+      const indexHtml = entries['index.html'];
+      if (indexHtml) {
+        const staticCatalog = staticCatalogCards(texts);
+        entries['index.html'] = indexHtml
+          .replace('<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="true"></div>', `<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="false">${staticCatalog}</div>`)
+          .replace('<strong id="statTexts">38</strong>', `<strong id="statTexts">${texts.length.toLocaleString('fr-FR')}</strong>`)
+          .replace('<span id="resultsCount">Chargement des textes…</span>', `<span id="resultsCount">${texts.length.toLocaleString('fr-FR')} textes disponibles</span>`);
+        fs.writeFileSync(path.join(out, 'index.html'), entries['index.html'], 'utf8');
+      }
+      const template = entries['texte.html'];
+      const seen = new Set();
+      for (const record of texts) {
+        const slug = record.slug || slugify(record.title, record.catalog_id);
+        if (seen.has(slug)) continue;
+        seen.add(slug);
+        const target = path.join(out, 'textes', `${slug}.html`);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, withSeoPage(template, record, slug), 'utf8');
+      }
+      console.warn(`Used ${fallbackTexts.length} cached text records to keep crawler-visible pages available.`);
+    }
     console.warn('The base site remains deployable; rerun the build when Supabase is available.');
     fs.writeFileSync(path.join(out, 'sitemap.xml'), staticSitemap(texts, jurisprudence), 'utf8');
     console.log(`Prepared ${Object.keys(entries).length} static files plus existing SEO files`);
