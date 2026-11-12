@@ -160,11 +160,33 @@ async function loadPublicJurisprudence() {
   return details.filter(item => item && item.id);
 }
 
+function seoDescription(title, category, structure, record) {
+  const normalized = title.toLowerCase();
+  const focused = normalized.includes('62-041')
+    ? `Ordonnance n° 62-041 du 19 septembre 1962 : dispositions générales de droit international privé à Madagascar. Texte intégral et articles.`
+    : normalized.includes('code du travail') || normalized.includes('2024-014')
+      ? `Code du travail malagasy, Loi n° 2024-014 du 14 août 2024 : texte intégral, articles et version consolidée.`
+      : normalized.includes('code général des impôts')
+        ? `Code général des impôts de Madagascar : texte intégral, articles et consolidation suivant les lois de finances.`
+        : normalized.includes('2004-007') || normalized.includes('lois de finances')
+          ? `Loi organique n° 2004-007 sur les lois de finances (LOLF) à Madagascar : texte intégral et articles.`
+          : normalized.includes('cybercriminal')
+            ? `Loi malagasy sur la lutte contre la cybercriminalité : texte intégral, articles et références juridiques.`
+            : normalized.includes('théorie générale des obligations')
+              ? `LTGO — Théorie Générale des Obligations à Madagascar : contrats, obligations, articles et texte intégral consolidé.`
+              : normalized.includes('prévoyance sociale')
+                ? `Code de prévoyance sociale de Madagascar : décret, texte intégral, articles et dispositions applicables.`
+                : '';
+  const base = focused || String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim();
+  const prefix = focused ? '' : (category ? `${category} — ` : 'Droit malagasy — ');
+  return `${prefix}${base}`.replace(/\s+/g, ' ').trim().slice(0, 155);
+}
+
 function withSeoPage(template, record, slug) {
   const structure = record.structure_json && typeof record.structure_json === 'object' ? record.structure_json : {};
   const title = String(record.title || structure.title || 'Texte juridique');
   const category = String(record.category || structure.domain || '').replace(/\s+/g, ' ').trim();
-  const description = `${category ? `${category} — ` : ''}${String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim()}`.slice(0, 155);
+  const description = seoDescription(title, category, structure, record);
   const canonical = `${siteBase}/textes/${slug}.html`;
   const sources = sourceEntries(structure.sources);
   const metadata = [record.category, record.status].filter(Boolean).map(value => `<span>${escapeHtml(value)}</span>`).join('');
