@@ -246,6 +246,23 @@ function withJurisprudencePage(template, record, slug) {
   return html;
 }
 
+function staticCatalogCards(texts) {
+  return texts.map(record => {
+    const structure = record.structure_json && typeof record.structure_json === 'object' ? record.structure_json : {};
+    const title = String(record.title || structure.title || 'Texte juridique');
+    const slug = slugify(title, record.catalog_id);
+    const category = String(record.category || structure.domain || 'Droit malagasy');
+    const summary = String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim();
+    const status = String(record.status || 'Publié');
+    return `<a class="document-card seo-static-card" href="textes/${slug}.html" aria-label="Lire ${escapeHtml(title)}">
+      <div class="card-topline"><span class="status-badge status-consolide">${escapeHtml(status)}</span><span class="category-label">${escapeHtml(category)}</span></div>
+      <h3>${escapeHtml(title)}</h3><p>${escapeHtml(summary.slice(0, 180))}</p>
+      <div class="card-tags"><span class="card-tag">${escapeHtml(category.split(/[&/]/)[0].trim())}</span><span class="card-tag">Texte consultable</span></div>
+      <div class="card-bottom"><span class="card-date">${escapeHtml(displayDate(record.last_amended_at || record.updated_at))}</span><span class="card-action">Lire le texte</span></div>
+    </a>`;
+  }).join('\n');
+}
+
 function staticSitemap(texts, jurisprudence = []) {
   const urls = [
     `${siteBase}/`,
@@ -279,6 +296,15 @@ async function main() {
   let jurisprudence = [];
   try {
     texts = await loadPublicTexts();
+    const indexHtml = entries['index.html'];
+    if (indexHtml) {
+      const staticCatalog = staticCatalogCards(texts);
+      entries['index.html'] = indexHtml
+        .replace('<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="true"></div>', `<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="false">${staticCatalog}</div>`)
+        .replace('<strong id="statTexts">38</strong>', `<strong id="statTexts">${texts.length.toLocaleString('fr-FR')}</strong>`)
+        .replace('<span id="resultsCount">Chargement des textes…</span>', `<span id="resultsCount">${texts.length.toLocaleString('fr-FR')} textes disponibles</span>`);
+      fs.writeFileSync(path.join(out, 'index.html'), entries['index.html'], 'utf8');
+    }
     const template = entries['texte.html'];
     if (!template) throw new Error('texte.html template is missing from the site bundle.');
     const seen = new Set();
