@@ -175,7 +175,12 @@ function withSeoPage(template, record, slug) {
     dateModified: record.updated_at || record.last_amended_at || undefined,
     isBasedOn: sources.map(source => source.url).filter(url => String(url || '').startsWith('http')),
     isPartOf: { '@type': 'WebSite', name: 'Mada Base Légale', url: siteBase },
-    publisher: { '@type': 'Organization', name: 'Rohy — Juritech' }
+    publisher: { '@type': 'Organization', name: 'Rohy — Juritech' },
+    breadcrumb: { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: siteBase + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Textes de loi', item: siteBase + '/#bibliotheque' },
+      { '@type': 'ListItem', position: 3, name: title, item: canonical }
+    ] }
   };
   let html = template
     .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(description)}">`)
@@ -214,7 +219,12 @@ function withJurisprudencePage(template, record, slug) {
     datePublished: record.published_at, dateModified: record.published_at,
     isBasedOn: String(record.source_url || '').startsWith('http') ? record.source_url : undefined,
     about: { '@type': 'Thing', name: 'Jurisprudence de Madagascar' },
-    publisher: { '@type': 'Organization', name: 'Rohy — Juritech' }
+    publisher: { '@type': 'Organization', name: 'Rohy — Juritech' },
+    breadcrumb: { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: siteBase + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Jurisprudence', item: siteBase + '/jurisprudence.html' },
+      { '@type': 'ListItem', position: 3, name: title, item: canonical }
+    ] }
   };
   const meta = [['Juridiction', record.jurisdiction], ['Chambre', record.chamber], ['Décision', record.decision_number], ['Affaire', record.case_number], ['Date', displayDate(record.decision_date)], ['Solution', record.outcome]]
     .filter(([, value]) => value).map(([label, value]) => `<span><strong>${escapeHtml(label)}</strong>${escapeHtml(value)}</span>`).join('');
@@ -243,9 +253,12 @@ function staticSitemap(texts, jurisprudence = []) {
     `${siteBase}/applications.html`,
     `${siteBase}/jurisprudence.html`
   ];
-  for (const record of texts) urls.push(`${siteBase}/textes/${slugify(record.title, record.catalog_id)}.html`);
-  for (const record of jurisprudence) urls.push(`${siteBase}/jurisprudence/${slugify(record.title, record.id)}.html`);
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url => `  <url><loc>${escapeHtml(url)}</loc></url>`).join('\n')}\n</urlset>\n`;
+  const entriesWithDates = [
+    ...texts.map(record => ({ url: `${siteBase}/textes/${slugify(record.title, record.catalog_id)}.html`, date: record.updated_at || record.last_amended_at })),
+    ...jurisprudence.map(record => ({ url: `${siteBase}/jurisprudence/${slugify(record.title, record.id)}.html`, date: record.published_at }))
+  ];
+  const all = [...urls.map(url => ({ url })), ...entriesWithDates];
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${all.map(entry => `  <url><loc>${escapeHtml(entry.url)}</loc>${entry.date ? `<lastmod>${escapeHtml(String(entry.date).slice(0, 10))}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`;
 }
 
 async function main() {
