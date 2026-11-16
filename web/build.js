@@ -208,17 +208,17 @@ function withSeoPage(template, record, slug) {
     ] }
   };
   let html = template
-    .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(description)}">`)
+    .replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${escapeHtml(description)}">`)
     .replace('<meta name="robots" content="noindex,follow">', '')
-    .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
-    .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(description)}">`)
-    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
-    .replace('</head>', `<link rel="canonical" href="${escapeHtml(canonical)}"><script type="application/ld+json">${jsonForScript(structuredData)}</script><script>window.__MBL_PRELOADED_TEXT__=${jsonForScript(record)};</script></head>`)
-    .replace('<h1 id="readerTitle">Chargement du texte…</h1>', `<h1 id="readerTitle">${escapeHtml(title)}</h1>`)
-    .replace('<div class="reader-meta" id="readerMeta"></div>', `<div class="reader-meta" id="readerMeta">${metadata}</div>`)
-    .replace('<p id="readerSummary"></p>', `<p id="readerSummary">${escapeHtml(String(structure.summary || record.status_note || ''))}</p>`)
-    .replace('</details>', `</details>${consolidationPanel(record, structure)}`)
-    .replace('<section class="reader-content" id="readerArticles" aria-live="polite"></section>', `<section class="reader-content" id="readerArticles" aria-live="polite">${staticArticles(structure)}</section>`)
+    .replace(/<meta property="og:title" content="[^"]*">/, () => `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, () => `<meta property="og:description" content="${escapeHtml(description)}">`)
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
+    .replace('</head>', () => `<link rel="canonical" href="${escapeHtml(canonical)}"><script type="application/ld+json">${jsonForScript(structuredData)}</script><script>window.__MBL_PRELOADED_TEXT__=${jsonForScript(record)};</script></head>`)
+    .replace('<h1 id="readerTitle">Chargement du texte…</h1>', () => `<h1 id="readerTitle">${escapeHtml(title)}</h1>`)
+    .replace('<div class="reader-meta" id="readerMeta"></div>', () => `<div class="reader-meta" id="readerMeta">${metadata}</div>`)
+    .replace('<p id="readerSummary"></p>', () => `<p id="readerSummary">${escapeHtml(String(structure.summary || record.status_note || ''))}</p>`)
+    .replace('</details>', () => `</details>${consolidationPanel(record, structure)}`)
+    .replace('<section class="reader-content" id="readerArticles" aria-live="polite"></section>', () => `<section class="reader-content" id="readerArticles" aria-live="polite">${staticArticles(structure)}</section>`)
     .replace('texte.html?id=', `textes/${slug}.html?id=`)
     .replace('href="styles.css"', 'href="../styles.css"')
     .replace('src="config.js"', 'src="../config.js"')
@@ -226,7 +226,8 @@ function withSeoPage(template, record, slug) {
     .replace('src="reader.js"', 'src="../reader.js"')
     .replaceAll('href="index.html', 'href="../index.html')
     .replaceAll('href="lexique.html', 'href="../lexique.html')
-    .replaceAll('href="applications.html', 'href="../applications.html');
+    .replaceAll('href="applications.html', 'href="../applications.html')
+    .replaceAll('href="jurisprudence.html', 'href="../jurisprudence.html');
   return html;
 }
 
@@ -255,19 +256,19 @@ function withJurisprudencePage(template, record, slug) {
     .filter(([, value]) => value).map(([label, value]) => `<span><strong>${escapeHtml(label)}</strong>${escapeHtml(value)}</span>`).join('');
   const source = String(record.source_url || '');
   let html = template
-    .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(description)}">`)
+    .replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${escapeHtml(description)}">`)
     .replace('<meta name="robots" content="noindex,follow">', '')
-    .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
-    .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(description)}">`)
-    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
-    .replace('<link rel="canonical" href="https://mbl-web.vercel.app/jurisprudence.html">', `<link rel="canonical" href="${escapeHtml(canonical)}">`)
-    .replace('</head>', `<script type="application/ld+json">${jsonForScript(structuredData)}</script></head>`)
-    .replace('<h1 id="jurisTitle">Chargement de la décision…</h1>', `<h1 id="jurisTitle">${escapeHtml(title)}</h1>`)
-    .replace('<p class="juris-lede" id="jurisLead"></p>', `<p class="juris-lede" id="jurisLead">${escapeHtml(record.fiche?.question || record.subject || '')}</p>`)
-    .replace('<div class="juris-meta" id="jurisMeta"></div>', `<div class="juris-meta" id="jurisMeta">${meta}</div>`)
-    .replace('<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"></div></details>', `<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></div></details>`)
+    .replace(/<meta property="og:title" content="[^"]*">/, () => `<meta property="og:title" content="${escapeHtml(title)} | Mada Base Légale">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, () => `<meta property="og:description" content="${escapeHtml(description)}">`)
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${escapeHtml(title)} | Mada Base Légale</title>`)
+    .replace('<link rel="canonical" href="https://mbl-web.vercel.app/jurisprudence.html">', () => `<link rel="canonical" href="${escapeHtml(canonical)}">`)
+    .replace('</head>', () => `<script type="application/ld+json">${jsonForScript(structuredData)}</script></head>` )
+    .replace('<h1 id="jurisTitle">Chargement de la décision…</h1>', () => `<h1 id="jurisTitle">${escapeHtml(title)}</h1>` )
+    .replace('<p class="juris-lede" id="jurisLead"></p>', () => `<p class="juris-lede" id="jurisLead">${escapeHtml(record.fiche?.question || record.subject || '')}</p>` )
+    .replace('<div class="juris-meta" id="jurisMeta"></div>', () => `<div class="juris-meta" id="jurisMeta">${meta}</div>` )
+    .replace('<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"></div></details>', () => `<details class="juris-editorial" id="jurisEditorial"><summary>Comprendre la décision <span aria-hidden="true">＋</span></summary><div class="fiche-content"><div class="fiche-heading"><span class="section-kicker">FICHE ÉDITORIALE</span><p>Cette synthèse est distincte du texte source.</p></div><div class="fiche-grid">${ficheHtml(record.fiche)}</div></div></details>`)
     .replace('<a id="jurisSourceLink" class="text-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Voir la source officielle ↗</a>', source.startsWith('http') ? `<a id="jurisSourceLink" class="text-link" href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer">Voir la source officielle ↗</a>` : '')
-    .replace('<pre id="jurisBody"></pre>', `<pre id="jurisBody">${escapeHtml(record.body_text || '')}</pre>`);
+    .replace('<pre id="jurisBody"></pre>', () => `<pre id="jurisBody">${escapeHtml(record.body_text || '')}</pre>`);
   return html;
 }
 
@@ -330,7 +331,7 @@ async function main() {
     if (indexHtml) {
       const staticCatalog = staticCatalogCards(texts);
       entries['index.html'] = indexHtml
-        .replace('<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="true"></div>', `<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="false">${staticCatalog}</div>`)
+        .replace('<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="true"></div>', () => `<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="false">${staticCatalog}</div>` )
         .replace('<strong id="statTexts">38</strong>', `<strong id="statTexts">${texts.length.toLocaleString('fr-FR')}</strong>`)
         .replace('<span id="resultsCount">Chargement des textes…</span>', `<span id="resultsCount">${texts.length.toLocaleString('fr-FR')} textes disponibles</span>`);
       fs.writeFileSync(path.join(out, 'index.html'), entries['index.html'], 'utf8');
@@ -366,7 +367,7 @@ async function main() {
       if (indexHtml) {
         const staticCatalog = staticCatalogCards(texts);
         entries['index.html'] = indexHtml
-          .replace('<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="true"></div>', `<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="false">${staticCatalog}</div>`)
+          .replace('<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="true"></div>', () => `<div class="document-grid" id="documentGrid" aria-live="polite" aria-busy="false">${staticCatalog}</div>` )
           .replace('<strong id="statTexts">38</strong>', `<strong id="statTexts">${texts.length.toLocaleString('fr-FR')}</strong>`)
           .replace('<span id="resultsCount">Chargement des textes…</span>', `<span id="resultsCount">${texts.length.toLocaleString('fr-FR')} textes disponibles</span>`);
         fs.writeFileSync(path.join(out, 'index.html'), entries['index.html'], 'utf8');
