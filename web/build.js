@@ -160,6 +160,13 @@ async function loadPublicJurisprudence() {
   return details.filter(item => item && item.id);
 }
 
+function withPdfAccessDescription(value) {
+  const suffix = ' Accès au PDF hors ligne dans l’application MBL.';
+  const clean = String(value || '').replace(/\s+/g, ' ').trim();
+  const room = Math.max(0, 155 - suffix.length);
+  return `${clean.slice(0, room).trimEnd()}${suffix}`;
+}
+
 function seoDescription(title, category, structure, record) {
   const normalized = title.toLowerCase();
   const focused = normalized.includes('62-041')
@@ -179,7 +186,7 @@ function seoDescription(title, category, structure, record) {
                 : '';
   const base = focused || String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim();
   const prefix = focused ? '' : (category ? `${category} — ` : 'Droit malagasy — ');
-  return `${prefix}${base}`.replace(/\s+/g, ' ').trim().slice(0, 155);
+  return withPdfAccessDescription(`${prefix}${base}`);
 }
 
 function withSeoPage(template, record, slug) {
