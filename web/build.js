@@ -184,9 +184,15 @@ function seoDescription(title, category, structure, record) {
               : normalized.includes('prévoyance sociale')
                 ? `Code de prévoyance sociale de Madagascar : décret, texte intégral, articles et dispositions applicables.`
                 : '';
-  const base = focused || String(structure.summary || record.status_note || `Consultez ${title} dans la base légale de Madagascar.`).replace(/\s+/g, ' ').trim();
-  const prefix = focused ? '' : (category ? `${category} — ` : 'Droit malagasy — ');
-  return withPdfAccessDescription(`${prefix}${base}`);
+  if (focused) return withPdfAccessDescription(focused);
+
+  // Chaque nouveau texte reçoit automatiquement une description contextualisée
+  // à partir des champs déjà synchronisés depuis Supabase, sans saisie manuelle.
+  const summary = String(
+    structure.summary || record.status_note || 'Texte juridique malagasy, articles et références consultables sur Mada Base Légale.'
+  ).replace(/\s+/g, ' ').trim();
+  const domain = category || 'Droit malagasy';
+  return withPdfAccessDescription(`${domain} — ${title}. ${summary}`);
 }
 
 function withSeoPage(template, record, slug) {
