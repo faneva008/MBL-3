@@ -7,6 +7,27 @@ const ALLOWED_HOSTS = new Set([
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://fekcmhwberumklgdqshf.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_js5AqdCWk9CvJWDoWeWPzw_GNFgzfrH';
 const MAX_APK_BYTES = 4_500_000;
+const NTFY_SERVER = String(process.env.NTFY_SERVER || 'https://ntfy.sh').replace(/\/$/, '');
+const NTFY_TOPIC = String(process.env.NTFY_TOPIC || 'mbl-site-alerts').trim();
+const NTFY_TOKEN = String(process.env.NTFY_TOKEN || '').trim();
+
+async function notifyDownload(filename) {
+  if (!NTFY_TOKEN || !NTFY_TOPIC) return;
+  try {
+    await fetch(`${NTFY_SERVER}/${encodeURIComponent(NTFY_TOPIC)}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${NTFY_TOKEN}`,
+        'Content-Type': 'text/plain; charset=utf-8',
+        Title: 'Nouvelle demande de téléchargement MBL',
+        Tags: 'arrow_down'
+      },
+      body: `Type : APK Android\nFichier : ${filename}\nSource : relais sécurisé /api/download-apk\nDate : ${new Date().toISOString()}`
+    });
+  } catch (_) {
+    // Une panne ntfy ne doit jamais empêcher le téléchargement.
+  }
+}
 
 function cleanFilename(value) {
   const fallback = 'application.apk';
@@ -83,6 +104,7 @@ export default async function handler(request, response) {
       response.status(502).send('L’empreinte du fichier APK ne correspond pas au catalogue.');
       return;
     }
+    await notifyDownload(filename);
     response.setHeader('Content-Type', 'application/vnd.android.package-archive');
     response.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     response.setHeader('Content-Length', String(content.length));
