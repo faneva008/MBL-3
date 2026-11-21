@@ -1,5 +1,5 @@
 const NTFY_SERVER = String(process.env.NTFY_SERVER || 'https://ntfy.sh').replace(/\/$/, '');
-const NTFY_TOPIC = String(process.env.NTFY_TOPIC || 'mbl-site-alerts').trim();
+const NTFY_TOPIC = String(process.env.NTFY_TOPIC || 'mbl-ef98e81338fc6b1f69a5').trim();
 const NTFY_TOKEN = String(process.env.NTFY_TOKEN || '').trim();
 const recent = globalThis.__mblNtfyClickAlerts || (globalThis.__mblNtfyClickAlerts = new Map());
 

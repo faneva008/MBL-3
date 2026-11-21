@@ -8,7 +8,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://fekcmhwberumklgdqshf.s
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_js5AqdCWk9CvJWDoWeWPzw_GNFgzfrH';
 const MAX_APK_BYTES = 4_500_000;
 const NTFY_SERVER = String(process.env.NTFY_SERVER || 'https://ntfy.sh').replace(/\/$/, '');
-const NTFY_TOPIC = String(process.env.NTFY_TOPIC || 'mbl-site-alerts').trim();
+const NTFY_TOPIC = String(process.env.NTFY_TOPIC || 'mbl-ef98e81338fc6b1f69a5').trim();
 const NTFY_TOKEN = String(process.env.NTFY_TOKEN || '').trim();
 
 async function notifyDownload(filename) {
