@@ -3,8 +3,8 @@ name: Sync published Supabase content
 on:
   workflow_dispatch:
   schedule:
-    # GitHub's shortest supported schedule interval is five minutes.
-    - cron: '*/5 * * * *'
+    # Synchronisation périodique légère ; utiliser « Run workflow » pour une mise à jour immédiate.
+    - cron: '0 */6 * * *'
 
 permissions:
   contents: write
@@ -28,15 +28,17 @@ jobs:
           SUPABASE_ANON_KEY: sb_publishable_js5AqdCWk9CvJWDoWeWPzw_GNFgzfrH
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --get "$SUPABASE_URL/rest/v1/mbl_website_public_texts" \
+          curl --fail --silent --show-error --compressed --get "$SUPABASE_URL/rest/v1/mbl_website_public_texts" \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Accept-Encoding: gzip" \
             --data-urlencode "select=catalog_id,updated_at,last_amended_at" \
             --data-urlencode "order=catalog_id.asc" \
             --data-urlencode "limit=1000" \
             -o /tmp/mbl-content.json
           python3 - <<'PY'
           import hashlib
+          import gzip
           import json
           import os
           import urllib.request
@@ -46,6 +48,7 @@ jobs:
               'apikey': os.environ['SUPABASE_ANON_KEY'],
               'Authorization': 'Bearer ' + os.environ['SUPABASE_ANON_KEY'],
               'Content-Type': 'application/json',
+              'Accept-Encoding': 'gzip',
           }
           items = []
           offset = 0
@@ -54,7 +57,8 @@ jobs:
                   'p_query': '', 'p_nature': '', 'p_limit': 20, 'p_offset': offset
               }).encode(), headers=headers, method='POST')
               with urllib.request.urlopen(request) as response:
-                  page = json.load(response)
+                  stream = gzip.GzipFile(fileobj=response) if response.headers.get('Content-Encoding') == 'gzip' else response
+                  page = json.load(stream)
               current = page.get('items', [])
               items.extend({key: item.get(key) for key in (
                   'id', 'revision', 'title', 'source_code', 'decision_date', 'reviewed_at'
