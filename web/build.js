@@ -315,6 +315,27 @@ function staticSitemap(texts, jurisprudence = []) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${all.map(entry => `  <url><loc>${escapeHtml(entry.url)}</loc>${entry.date ? `<lastmod>${escapeHtml(String(entry.date).slice(0, 10))}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`;
 }
 
+function injectVercelAnalytics() {
+  const snippet = `  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>\n  <script defer src="/_vercel/insights/script.js"></script>`;
+  const htmlFiles = [];
+  function visit(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(target);
+      else if (entry.isFile() && entry.name.endsWith('.html')) htmlFiles.push(target);
+    }
+  }
+  visit(out);
+  let injected = 0;
+  for (const file of htmlFiles) {
+    const html = fs.readFileSync(file, 'utf8');
+    if (html.includes('/_vercel/insights/script.js') || !html.includes('</head>')) continue;
+    fs.writeFileSync(file, html.replace('</head>', `${snippet}\n</head>`), 'utf8');
+    injected += 1;
+  }
+  console.log(`Vercel Analytics enabled on ${injected} HTML pages`);
+}
+
 async function main() {
   fs.rmSync(out, { recursive: true, force: true });
   for (const [relativePath, content] of Object.entries(entries)) {
@@ -394,6 +415,7 @@ async function main() {
     fs.writeFileSync(path.join(out, 'sitemap.xml'), staticSitemap(texts, jurisprudence), 'utf8');
     console.log(`Prepared ${Object.keys(entries).length} static files plus existing SEO files`);
   }
+  injectVercelAnalytics();
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });
