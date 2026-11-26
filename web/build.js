@@ -160,13 +160,6 @@ async function loadPublicJurisprudence() {
   return details.filter(item => item && item.id);
 }
 
-function withPdfAccessDescription(value) {
-  const suffix = ' Accès au PDF hors ligne dans l’application MBL.';
-  const clean = String(value || '').replace(/\s+/g, ' ').trim();
-  const room = Math.max(0, 155 - suffix.length);
-  return `${clean.slice(0, room).trimEnd()}${suffix}`;
-}
-
 function seoDescription(title, category, structure, record) {
   const normalized = title.toLowerCase();
   const focused = normalized.includes('62-041')
@@ -184,7 +177,7 @@ function seoDescription(title, category, structure, record) {
               : normalized.includes('prévoyance sociale')
                 ? `Code de prévoyance sociale de Madagascar : décret, texte intégral, articles et dispositions applicables.`
                 : '';
-  if (focused) return withPdfAccessDescription(focused);
+  if (focused) return focused;
 
   // Chaque nouveau texte reçoit automatiquement une description contextualisée
   // à partir des champs déjà synchronisés depuis Supabase, sans saisie manuelle.
@@ -192,7 +185,7 @@ function seoDescription(title, category, structure, record) {
     structure.summary || record.status_note || 'Texte juridique malagasy, articles et références consultables sur Mada Base Légale.'
   ).replace(/\s+/g, ' ').trim();
   const domain = category || 'Droit malagasy';
-  return withPdfAccessDescription(`${domain} — ${title}. ${summary}`);
+  return `${domain} — ${title}. ${summary}`.replace(/\s+/g, ' ').trim().slice(0, 155);
 }
 
 function withSeoPage(template, record, slug) {
