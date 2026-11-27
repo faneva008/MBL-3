@@ -29,6 +29,30 @@ async function notifyDownload(filename) {
   }
 }
 
+async function recordDownload(published, filename, size, sha256) {
+  try {
+    await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/apk_download_events`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        app_id: published.id || null,
+        app_slug: published.slug || 'unknown',
+        version: published.version || null,
+        filename,
+        file_size_bytes: size,
+        sha256
+      })
+    });
+  } catch (_) {
+    // Une panne du compteur ne doit jamais empêcher le téléchargement.
+  }
+}
+
 function cleanFilename(value) {
   const fallback = 'application.apk';
   const name = String(value || fallback)
@@ -39,7 +63,7 @@ function cleanFilename(value) {
 
 async function publishedDriveFile(id) {
   const url = new URL(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/website_apps`);
-  url.searchParams.set('select', 'storage_path,sha256,is_published');
+  url.searchParams.set('select', 'id,slug,version,storage_path,sha256,is_published');
   url.searchParams.set('is_published', 'eq.true');
   url.searchParams.set('limit', '100');
   const response = await fetch(url, {
@@ -104,6 +128,7 @@ export default async function handler(request, response) {
       response.status(502).send('L’empreinte du fichier APK ne correspond pas au catalogue.');
       return;
     }
+    await recordDownload(published, filename, content.length, sha256);
     await notifyDownload(filename);
     response.setHeader('Content-Type', 'application/vnd.android.package-archive');
     response.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
